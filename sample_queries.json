@@ -1,0 +1,13 @@
+# mutation ($url: String!, $description: String!) {
+#   post (url: $url, description: $description) {
+#     id
+#   }
+# }
+
+# query{
+#   feed {
+#     id,
+#     description,
+#     url
+#   }
+# }

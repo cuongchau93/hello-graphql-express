@@ -1,17 +1,10 @@
 var express = require('express');
+const { prisma } = require('./prisma/generated/prisma-client')
 var graphqlHTTP = require('express-graphql');
 var {
     buildSchema
 } = require('graphql');
 
-// 1
-let links = [{
-        id: 'link-0',
-        url: 'www.howtographql.com',
-        description: 'Fullstack tutorial for GraphQL'
-    }
-]
-let idCount = links.length;
 var schema = buildSchema(`
 
 type Link {
@@ -58,23 +51,22 @@ const resolvers = {
     },
 
     info: () => 'This is the API of a Hackernews Clone',
-    // 2
-    feed: () => links,
+
+	feed: (root, context, info) => {
+      return context.prisma.links();
+    },
+	
     // 3
     Link: {
         id: (parent) => parent.id,
         description: (parent) => parent.description,
         url: (parent) => parent.url,
     },
-    post: (args) => {
-
-        const link = {
-            id: `link-${idCount++}`,
-            description: args.description,
-            url: args.url,
-        }
-        links.push(link)
-        return link
+ post: (args, context, info) => {
+      return context.prisma.createLink({
+        url: args.url,
+        description: args.description,
+      })
     }
 };
 
@@ -82,6 +74,7 @@ var app = express();
 app.use('/graphql', graphqlHTTP({
         schema: schema,
         rootValue: resolvers,
+		context: { prisma },
         graphiql: true,
     }));
 app.listen(4000, () => console.log('Now browse to localhost:4000/graphql'));
